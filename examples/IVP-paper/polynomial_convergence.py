@@ -55,14 +55,14 @@ def y_eps(t, k, x_0, alpha, beta, eps):
 ### Figure parameters ###
 fig_size = 4.5
 big_font, small_font = 12.5, 11.5
-SAVE_TO_PDF = False
+SAVE_TO_PDF = True
 
 # %%
 ### Simulation parameters ###
 
 T = 4
 q = 1
-CONV_TOL = 1e-18
+CONV_TOL = 1e-12
 
 # %%
 ### h plot parameters ###
@@ -99,7 +99,11 @@ if "h" in PLOT_SELECTION:
         solver = bs.initialize_solver(f.f, y_0, alpha, beta_vals=beta)
 
         res = solver.run(
-            t_eval=t_hr_eval, verbose=False, conv_tol=CONV_TOL, method="local"
+            t_eval=t_hr_eval,
+            verbose=False,
+            conv_tol=CONV_TOL,
+            method="local",
+            conv_max_it=5000,
         )
         y_q_eps, t, run_time_s = np.squeeze(res["x"]), t_hr_eval, res["total_time"]
         y_eps_vals = y_eps(t, k, y_0, alpha, beta=beta, eps=eps)
@@ -197,7 +201,11 @@ if "q" in PLOT_SELECTION:
         f.bs_mult, f.bs_upscale = bs.splines_multiply, bs.splines_upscale
         solver = bs.initialize_solver(f.f, y_0, alpha, beta_vals=beta)
         res = solver.run(
-            t_eval=t_hr_eval, verbose=False, conv_tol=CONV_TOL, method="local"
+            t_eval=t_hr_eval,
+            verbose=False,
+            conv_tol=CONV_TOL,
+            method="local",
+            conv_max_it=5000,
         )
 
         label_str = f"$q\,={q}$"
@@ -295,7 +303,11 @@ if "eps" in PLOT_SELECTION:
         f.bs_mult, f.bs_upscale = bs.splines_multiply, bs.splines_upscale
         solver = bs.initialize_solver(f.f, y_0, alpha, beta_vals=beta)
         res = solver.run(
-            t_eval=t_hr_eval, verbose=False, conv_tol=CONV_TOL, method="local"
+            t_eval=t_hr_eval,
+            verbose=False,
+            conv_tol=CONV_TOL,
+            method="local",
+            conv_max_it=5000,
         )
 
         label_str = rf"$\varepsilon \,={1/base_eps:.0f}^{{-{i_vals_eps[i]}}}$"
