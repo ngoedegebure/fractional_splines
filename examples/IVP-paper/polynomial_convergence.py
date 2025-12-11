@@ -7,10 +7,18 @@ from scipy.special import gamma, betainc
 import time
 from fracnum.splines import BernsteinMethods
 
+def print_sc(output_str, remove_zero_exp = False):
+    output_str_format = output_str.replace("e+0", " \cdot 10^{").replace("e-0", " \cdot 10^{-")
+    
+    if remove_zero_exp:
+        print(output_str_format.replace(r"\cdot 10^{0 }", ""))
+    else:
+        print(output_str_format)
+
 # %%
 
-# PLOT_SELECTION = ["h", "q", "eps"]
 PLOT_SELECTION = ["h", "q", "eps"]
+SAVE_TO_PDF = False
 
 # %%
 ### Initialize rhs function f ###
@@ -55,7 +63,6 @@ def y_eps(t, k, x_0, alpha, beta, eps):
 ### Figure parameters ###
 fig_size = 4.5
 big_font, small_font = 12.5, 11.5
-SAVE_TO_PDF = True
 
 # %%
 ### Simulation parameters ###
@@ -81,8 +88,8 @@ if "h" in PLOT_SELECTION:
         np.linspace(eps / T, 1, int(T / (base_h**10)))
     ) * T  # high-res time values
     colors, cmap = get_lin_line_colors(h_vals)
-    error_s = np.zeros(len(h_vals))
-    run_times = np.zeros([len(h_vals), 2])
+    mean_error_s, error_s = np.zeros(len(h_vals)), np.zeros(len(h_vals))
+    run_times = np.zeros([len(h_vals)])
     spline_its = np.zeros(len(h_vals))
 
     fig, axs = plt.subplots(1, 3, figsize=(3 * fig_size, fig_size), layout="tight")
@@ -119,6 +126,7 @@ if "h" in PLOT_SELECTION:
         if i == detail_i_select:
             error = error_time_weighed
 
+        mean_error_s[i] = np.mean(np.abs(error_time_weighed))
         error_s[i] = np.max(np.abs(error_time_weighed))
 
         i += 1
@@ -175,6 +183,12 @@ if "h" in PLOT_SELECTION:
     else:
         plt.show()
 
+    print("\n~~~h TABLE ~~~\n")
+    print(r"$h$ & mean weighed error & sup weighed error & total time (s) \\ \hline")
+    for i_h in range(len(h_vals)):
+        print_sc(fr"${1/base_h:.0f}^{{-{i_h}}}$ &$ {mean_error_s[i_h]:.3e} }}$& ${error_s[i_h]:.3e}}}$ & ${run_times[i_h]:.3e}}}$ \\")
+    print(r'\hline'+"\n")
+
 # %%
 if "q" in PLOT_SELECTION:
     h = 2 ** (-1)
@@ -183,8 +197,8 @@ if "q" in PLOT_SELECTION:
     detail_q_select = 4
 
     colors, cmap = get_lin_line_colors(q_vals)
-    error_q = np.zeros(len(q_vals))
-    run_times = np.zeros([len(q_vals), 2])
+    error_q, mean_error_q = np.zeros(len(q_vals)), np.zeros(len(q_vals))
+    run_times_q = np.zeros([len(q_vals)])
     spline_its = np.zeros(len(q_vals))
     fig, axs = plt.subplots(1, 3, figsize=(3 * fig_size, fig_size), layout="tight")
 
@@ -212,7 +226,7 @@ if "q" in PLOT_SELECTION:
         y_q_eps, t, run_time_s = np.squeeze(res["x"]), t_hr_eval, res["total_time"]
         y_eps_vals = y_eps(t, k, y_0, alpha, beta=beta, eps=eps)
 
-        run_times[i] = np.array([run_time_s])
+        run_times_q[i] = np.array([run_time_s])
         spline_its[i] = res["n_it_per_knot"]
 
         axs[0].plot(t, y_q_eps, label=label_str, color=colors[i])
@@ -223,6 +237,7 @@ if "q" in PLOT_SELECTION:
             error = error_time_weighed
 
         error_q[i] = np.max(np.abs(error_time_weighed))
+        mean_error_q[i] = np.mean(np.abs(error_time_weighed))
 
         i += 1
 
@@ -272,6 +287,12 @@ if "q" in PLOT_SELECTION:
     else:
         plt.show()
 
+    print("\n~~~q TABLE ~~~\n")
+    print(r"$q$ & mean weighed error & sup weighed error & total time (s) \\ \hline")
+    for i_q in range(len(q_vals)):
+        print_sc(fr"${q_vals[i_q]:.0f}$ &$ {mean_error_q[i_q]:.3e} }}$& ${error_q[i_q]:.3e}}}$ & ${run_times_q[i_q]:.3e}}}$ \\")
+    print(r'\hline'+"\n")
+
 # %%
 if "eps" in PLOT_SELECTION:
     h = 2 ** (-1)
@@ -284,10 +305,11 @@ if "eps" in PLOT_SELECTION:
     detail_eps_i_select = [0, 1, 2, 3]
 
     colors, cmap = get_lin_line_colors(eps_vals)
-    error_eps = np.zeros(len(eps_vals))
+    error_eps, mean_error_eps = np.zeros(len(eps_vals)), np.zeros(len(eps_vals))
 
-    run_times = np.zeros([len(eps_vals), 2])
+    run_times_eps = np.zeros(len(eps_vals))
     spline_its = np.zeros(len(eps_vals))
+    first_val = np.zeros(len(eps_vals))
 
     fig, axs = plt.subplots(1, 3, figsize=(3 * fig_size, fig_size), layout="tight")
 
@@ -315,13 +337,15 @@ if "eps" in PLOT_SELECTION:
         y_q_eps, t, run_time_s = np.squeeze(res["x"]), t_hr_eval, res["total_time"]
         y_vals = y(t, k, y_0, alpha, beta=beta)
 
-        run_times[i] = np.array([run_time_s])
+        first_val[i] = y_q_eps[0]
+        run_times_eps[i] = np.array([run_time_s])
         spline_its[i] = res["n_it_per_knot"]
 
         axs[0].plot(t, y_q_eps, label=label_str, color=colors[i])
 
         error_time_weighed = t ** (1 - gamm) * (y_q_eps - y_vals)
         error_eps[i] = np.max(np.abs(error_time_weighed))
+        mean_error_eps[i] = np.max(np.abs(error_time_weighed))
 
         if eps in eps_vals[detail_eps_i_select]:
             error = error_time_weighed
@@ -377,3 +401,9 @@ if "eps" in PLOT_SELECTION:
         )
     else:
         plt.show()
+    
+    print("\n~~~ eps TABLE ~~~\n")
+    print(r"$\varepsilon$ & mean weighed error & sup weighed error & total time (s) & $x^{q,\varepsilon}(\varepsilon)$ \\ \hline")
+    for i_eps in range(len(eps_vals)):
+        print_sc(fr"${1/base_eps:.0f}^{{-{i_vals_eps[i_eps]}}}$ &$ {mean_error_eps[i_eps]:.3e} }}$& ${error_eps[i_eps]:.3e}}}$ & ${run_times_eps[i_eps]:.3e}}}$ & ${first_val[i_eps]:.3e}}}$ \\")
+    print(r'\hline'+"\n")
