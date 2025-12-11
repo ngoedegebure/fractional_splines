@@ -66,7 +66,7 @@ class SplineSolver:
     def build_forcing_values(self, forcing_parameters):
         # Initialize forcing values as 0
         # Needs to be float in order to not create errors on addition later
-        tic = time.time()
+        tic = time.perf_counter_ns()
         forcing_vals = [np.array([0], dtype="float64")] * self.d
         forcing_enabled = False
 
@@ -122,8 +122,8 @@ class SplineSolver:
             forcing_vals[dim] = sin_vals + c_vals
 
         if forcing_enabled:
-            toc = time.time()
-            elapsed = toc - tic
+            toc = time.perf_counter_ns()
+            elapsed = (toc - tic)*1e-9
             size = sum([getsizeof(forcing_vals[i]) for i in range(self.d)])
             print(f"... forcing values built ({elapsed:.2f} s, {size/(10**6):.2f} MB)!")
 
@@ -542,7 +542,7 @@ class SplineSolver:
         # Gets initial value for x
         x = self.get_initial_x(save_x)
 
-        tic = time.time()  # Start timer
+        tic = time.perf_counter_ns()  # Start timer
         ### Main solving: gets the solution and some statistics ###
         if method == "local":
             ### LOCAL SOLUTION METHOD: knot-for knot ###
@@ -561,8 +561,8 @@ class SplineSolver:
                 x, conv_tol, conv_max_it, div_treshold, norm, verbose, bvp=bvp, T=T
             )
 
-        toc = time.time()  # Stop timer
-        total_time = toc - tic  # Computes solution finding time
+        toc = time.perf_counter_ns()  # Stop timer
+        total_time = (toc - tic)*1e-9  # Computes solution finding time
 
         if T is not None:
             delta = self.get_delta(T, f_a_vals)

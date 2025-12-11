@@ -158,22 +158,22 @@ class SplineMethods:
             ################################################
             ## Main work below: computes the basis values ##
             ################################################
-            tic_c = time.time()
+            tic_c = time.perf_counter_ns()
             B_I_vals_list = (
                 dt**alpha * SplineMethods.I_a_b_beta(s_i, alpha, order_k, [0, 1]).T
             ).T
-            toc_c = time.time()
-            time_basis += toc_c - tic_c
+            toc_c = time.perf_counter_ns()
+            time_basis += (toc_c - tic_c)*1e-9
 
             # Reshape into matrix values. Takes a bit of time but still more efficient than doing the loop before
             # TODO (possibly) remove for loop in this reshaping bit!
-            tic_r = time.time()
+            tic_r = time.perf_counter_ns()
             for calc_knot in range(n_knots):
                 B_I[calc_knot, order_k, :, :] = SplineMethods.a_to_matrix(
                     B_I_vals_list[calc_knot, :], n_eval
                 )
-            toc_r = time.time()
-            time_reshape += toc_r - tic_r
+            toc_r = time.perf_counter_ns()
+            time_reshape += (toc_r - tic_r)*1e-9
 
         if time_verbose:
             print(

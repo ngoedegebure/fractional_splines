@@ -2,7 +2,7 @@ import numpy as np
 from scipy.special import gamma
 from mpmath import hyp1f2
 
-def ivp_diethelm(f, u_0, alpha_vals, T, dt):
+def ivp_diethelm(f, u_0, alpha_vals, T, dt, return_t_vals = False):
     h = dt
     N = int(T/h)
     t_vals = np.linspace(0, T, N+1)
@@ -55,7 +55,10 @@ def ivp_diethelm(f, u_0, alpha_vals, T, dt):
                 np.flip(a[2:(j+1)]) @ f_prev_vals[1:, dim]
             )
 
-    return y
+    if return_t_vals:
+        return t_vals, y
+    else:
+        return y
 
 def sin_I_a(t, alpha, omega):
     # Computes the fractional integral from 0 to t of sin(omega * t)
