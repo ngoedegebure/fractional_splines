@@ -3,7 +3,6 @@ import fracnum as fr
 import matplotlib.pyplot as plt
 
 from fracnum.splines import BernsteinSplines
-from fracnum.plotting_utils import VdP_Plotter
 from fracnum.plotting_utils import get_lin_line_colors
 from fracnum.ode_functions import ODEFunctions
 from fracnum.numerical import build_hilf_knot_vals
