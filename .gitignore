@@ -8,4 +8,6 @@ data_dump
 notebooks
 results
 examples/VdP/niels
+examples/Hilfer
 dona
+profiling_dump
