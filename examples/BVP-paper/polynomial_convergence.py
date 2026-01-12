@@ -4,8 +4,6 @@ import fracnum as fr
 import matplotlib.pyplot as plt
 from fracnum.plotting_utils import get_lin_line_colors
 from scipy.special import gamma, betainc
-import time
-from fracnum.splines import BernsteinMethods
 
 def print_sc(output_str, remove_zero_exp = False):
     output_str_format = output_str.replace("e+0", " \cdot 10^{").replace("e-0", " \cdot 10^{-")
