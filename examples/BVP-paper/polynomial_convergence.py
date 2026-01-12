@@ -17,8 +17,8 @@ def print_sc(output_str, remove_zero_exp = False):
 
 # %%
 
-PLOT_SELECTION = ["h","q","eps"]
-SAVE_TO_PDF = False
+PLOT_SELECTION = ['q']#["h","q","eps"]
+SAVE_TO_PDF = False 
 
 # %%
 ### Initialize rhs function f ###
@@ -79,7 +79,6 @@ plot_0_ylims = [-1,5]
 
 T = 3
 T_bvp = T
-q = 1
 CONV_TOL = 1e-12
 BVP = True
 HR_RES = 7500
@@ -98,6 +97,7 @@ if "h" in PLOT_SELECTION:
 
     ### h plot execution ###
 
+    q = 1
     t_hr_eval = (np.linspace(eps/T,1, HR_RES))**1*T # high-res time values
     colors, cmap = get_lin_line_colors(h_vals)
     mean_error_s, error_s = np.zeros(len(h_vals)), np.zeros(len(h_vals))
@@ -184,12 +184,12 @@ if "h" in PLOT_SELECTION:
 
     ### Detailed view (i = detail_i_select) ###
     axs[2].set_title(
-        rf"Absolute weighed error over time",
+        rf"Absolute weighted error over time",
         fontsize=small_font,
     )
     axs[2].set_xlabel("$t$")
     axs[2].set_ylabel(
-        r"Weighed error $|x^{q,\varepsilon}(t) - x^\varepsilon (t)|_{1-\gamma}$ "
+        r"weighted error $|x^{q,\varepsilon}(t) - x^\varepsilon (t)|_{1-\gamma}$ "
     )
     axs[2].legend()
 
@@ -202,7 +202,7 @@ if "h" in PLOT_SELECTION:
         plt.show()
 
     print("\n~~~h TABLE ~~~\n")
-    print(r"$h$ & mean weighed error & sup weighed error & delta & total time (s) \\ \hline")
+    print(r"$h$ & mean weighted error & sup weighted error & approx. $\Delta_T(\tilde{x}_0)$  & total time (s) \\ \hline")
     for i_h in range(len(h_vals)):
         print_sc(fr"${1/base_h:.0f}^{{-{i_h}}}$ &$ {mean_error_s[i_h]:.3e} }}$& ${error_s[i_h]:.3e}}}$ & ${delta_s[i_h]:.3e}}}$ &  ${run_times[i_h]:.3e}}}$ \\")
     print(r'\hline'+"\n")
@@ -292,10 +292,10 @@ if "q" in PLOT_SELECTION:
     )
     axs[1].legend()
 
-    axs[2].set_title(rf"Absolute weighed error over time (detail)", fontsize=small_font)
+    axs[2].set_title(rf"Absolute weighted error over time (detail)", fontsize=small_font)
     axs[2].set_xlabel("$t$")
     axs[2].set_ylabel(
-        r"Weighed error $|x^{q,\varepsilon}(t) - x^\varepsilon (t)|_{1-\gamma}$ "
+        r"weighted error $|x^{q,\varepsilon}(t) - x^\varepsilon (t)|_{1-\gamma}$ "
     )
     axs[2].set_xlim(-0.008,0.15)
     axs[2].legend()
@@ -309,7 +309,7 @@ if "q" in PLOT_SELECTION:
         plt.show()
 
     print("\n~~~q TABLE ~~~\n")
-    print(r"$q$ & mean weighed error & sup weighed error & $\Delta$ & total time (s) \\ \hline")
+    print(r"$q$ & mean weighted error & sup weighted error & approx. $\Delta_T(\tilde{x}_0)$  & total time (s) \\ \hline")
     for i_q in range(len(q_vals)):
         print_sc(fr"${q_vals[i_q]:.0f}$ &$ {mean_error_q[i_q]:.3e} }}$& ${error_q[i_q]:.3e}}}$  & ${delta_s[i_q]:.3e}}}$ & ${run_times_q[i_q]:.3e}}}$ \\")
     print(r'\hline'+"\n")
@@ -415,10 +415,10 @@ if "eps" in PLOT_SELECTION:
     )
     axs[1].legend()
 
-    axs[2].set_title("Absolute weighed error over time", fontsize=small_font)
+    axs[2].set_title("Absolute weighted error over time", fontsize=small_font)
     axs[2].legend()
     axs[2].set_xlabel("$t$")
-    axs[2].set_ylabel(r"Weighed error $|x^{q,\varepsilon}(t) - x (t)\,|_{1-\gamma}$ ")
+    axs[2].set_ylabel(r"weighted error $|x^{q,\varepsilon}(t) - x (t)\,|_{1-\gamma}$ ")
     if SAVE_TO_PDF:
         plt.savefig(
             f'figures/conv_eps--alpha_{str(alpha).replace(".", "_")}_k_{str(k).replace(".", "_")}.pdf',
@@ -428,7 +428,7 @@ if "eps" in PLOT_SELECTION:
         plt.show()
     
     print("\n~~~ eps TABLE ~~~\n")
-    print(r"$\varepsilon$ & mean weighed error & sup weighed error & $\Delta $ & total time (s) & $x^{q,\varepsilon}(\varepsilon)$ \\ \hline")
+    print(r"$\varepsilon$ & mean weighted error & sup weighted error & approx. $\Delta_T(\tilde{x}_0)$  & total time (s) & $x^{q,\varepsilon}(\varepsilon)$ \\ \hline")
     for i_eps in range(len(eps_vals)):
-        print_sc(fr"${1/base_eps:.0f}^{{-{i_vals_eps[i_eps]}}}$ &$ {mean_error_eps[i_eps]:.3e} }}$& ${error_eps[i_eps]:.3e}}}$ & ${delta_s[i_h]:.3e}}}$ &  ${run_times_eps[i_eps]:.3e}}}$ & ${first_val[i_eps]:.3e}}}$ \\")
+        print_sc(fr"${1/base_eps:.0f}^{{-{i_vals_eps[i_eps]}}}$ &$ {mean_error_eps[i_eps]:.3e} }}$& ${error_eps[i_eps]:.3e}}}$ & ${delta_s[i_eps]:.3e}}}$ &  ${run_times_eps[i_eps]:.3e}}}$ & ${first_val[i_eps]:.3e}}}$ \\")
     print(r'\hline'+"\n")

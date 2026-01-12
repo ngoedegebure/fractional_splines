@@ -52,6 +52,8 @@ eps = 10**(-10)
 c = 3/2
 h_max = 0.01
 
+SAVE_TO_PDF = True 
+
 beta_vals = np.linspace(0, 1, 401)
 Xi_vals = np.zeros(beta_vals.shape)
 Omega_vals = np.zeros(beta_vals.shape)
@@ -64,14 +66,18 @@ for beta_sel in beta_vals:
     Omega_vals[i] = np.max(omega_t_vals)
     i+=1
 
-plt.plot(beta_vals, Xi_vals+Omega_vals, label =r'$\Xi + \Omega_\mathcal{A}^q$', linewidth=2.5, linestyle='--', color='black')
+plt.plot(beta_vals, Xi_vals+Omega_vals, label =r'$\Xi + \Omega_\mathcal{A}^q$', linestyle='-', color='black')
 plt.plot(beta_vals, Xi_vals, label ='$\Xi$')
 plt.plot(beta_vals, Omega_vals, label =r'$\Omega_\mathcal{A}^q$')
-plt.plot(beta_vals, np.ones(len(Omega_vals)), color = 'red', linestyle="--", linewidth = 2.5, label = 'Convergence requirement upper bound')
+plt.plot(beta_vals, np.ones(len(Omega_vals)), color = 'red', linestyle="--", linewidth = 2, label = r'Convergence requirement upper bound $\rho = 1$')
 plt.legend()
+plt.ylim([0, 1.5])
 plt.xlabel(rf"$\beta$")
 plt.ylabel(rf"$\rho$")
-plt.savefig(f"figures/convergence_bound.pdf", bbox_inches='tight')
+if SAVE_TO_PDF:
+    plt.savefig(f"figures/convergence_bound.pdf", bbox_inches='tight')
+else:
+    plt.show()
 plt.close()
 print('Upper bound:', np.max(Xi_vals+Omega_vals))
 
@@ -97,7 +103,7 @@ for beta in beta_vals:
     solver = bs.initialize_solver(fun.f, x_0, alpha, beta_vals=beta)
 
     res = solver.run(verbose=False, conv_tol = TOL, conv_max_it=max_it, method='global', bvp=True, T = T, t_eval = t_hr_eval, save_x = False)
-    res_vals[i]  =res
+    res_vals[i] = res
     print(f"beta: {beta}, delta: {res['delta']}")
     x, t, run_time_s = np.squeeze(res['x']), res['t'], res['total_time']
     label_str = fr"$\beta = {beta:.1f}$"
@@ -107,17 +113,22 @@ for beta in beta_vals:
         
 plt.legend()
 plt.xlabel("$t$"), plt.ylabel("$x$")
-plt.savefig('figures/nonlin_ex_multiple_beta.pdf', bbox_inches='tight')
+if SAVE_TO_PDF:
+    plt.savefig('figures/nonlin_ex_multiple_beta.pdf', bbox_inches='tight')
+else:
+    plt.show()
 plt.close()
 
-print(r'$\beta$ & knots & $\Delta_T(\tilde{x}_0)$ & it.&  avg. it. per knot \\ \hline')
+print(r'$\beta$ & knots & $x(\varepsilon)$ & $\Delta_T(\tilde{x}_0)$ & time (s) &  avg. it. / knot & avg. time / knot \\ \hline')
 for i in range(N):
     gamm = alpha+beta_vals[i] - alpha*beta_vals[i]
     t = build_hilf_knot_vals(eps, T, c, gamm, h_max)[:-1]
     N = len(t)
-    output_str = rf"${beta_vals[i]:.2f}$ & ${N}$& ${np.squeeze(res_vals[i]['delta']):.3f}$&  ${res_vals[i]['n_it']}$& ${res_vals[i]['n_it_per_knot']:.3f}$"+ rf"\\ "
+    output_str = rf"${beta_vals[i]:.2f}$ & ${N}$& ${np.squeeze(res_vals[i]['x'])[0]:.3e}}}$ & ${np.squeeze(res_vals[i]['delta']):.3e}}}$&  ${res_vals[i]['total_time']:.3e}}}$& ${res_vals[i]['n_it_per_knot']:.3e}}}$ & ${res_vals[i]['time_per_knot']:.3e}}}$"+ rf"\\ "
     
-    print(output_str.replace('e+0', ' \cdot 10^').replace('e-0', ' \cdot 10^{-'))
+    print(output_str.replace('e+0', ' \cdot 10^{').replace('e-0', ' \cdot 10^{-'))
+
+print(r"\hline")
 
 beta= 0.5
 gamm = alpha+beta - alpha*beta
@@ -151,10 +162,16 @@ if METHOD == 'RF':
     T_result = sol.x
 elif METHOD == 'GRID':
     T_i_vals = np.linspace(gridlims[0], gridlims[1], int((gridlims[1]-gridlims[0])/grid_dt)+1)
+    N_T = len(T_i_vals)-1
+    N_plot_select = 6
+    i_plot_select = np.array((np.arange(N_plot_select)/(N_plot_select-1))*N_T, dtype='int')
+    T_i_colors, T_cmap = get_lin_line_colors(T_i_vals)
     delta_vals = np.zeros(T_i_vals.shape)
     delta_min, i_min = np.inf, 0
-    for i in range(len(T_i_vals)):
+    for i in range(N_T+1):
         res_gr = solver.run(verbose=False, conv_tol =TOL, conv_max_it=max_it, method='global', bvp=True, T=T_i_vals[i], save_x=False, t_eval = t_hr_eval)
+        if i in i_plot_select:
+            plt.plot(t_hr_eval, np.squeeze(res_gr['x']), label = rf"$T = {T_i_vals[i]:.3f}$", color=T_i_colors[i], alpha = 0.75)
         delta_vals[i] = np.squeeze(res_gr['delta'])
         if np.abs(delta_vals[i]) < delta_min:
             i_min = i
@@ -164,17 +181,32 @@ else:
     T_result = np.array([T_bvp_0])
 
 res = solver.run(verbose=False, conv_tol = TOL, conv_max_it=max_it, method='global', bvp=False, T = T_result[0], t_eval = t_hr_eval)
-
 print(f"T: {T_result}, delta: {res['delta']}")
 x, t, run_time_s = np.squeeze(res['x']), res['t'], res['total_time']
-label_str = fr"$\beta = {beta:.1f}$"
-plt.ylim([-1,5])
+
+plt.plot(t_hr_eval, x,"--",linewidth=2,color="lightseagreen",  label = fr"$T^* = {T_result[0]:.3f}$")
+plt.legend()
+plt.ylim([0,5])
+plt.xlabel('$t$')
+plt.ylabel('$x(t)$')
+
+if SAVE_TO_PDF:
+    plt.savefig(f"figures/polynomial_T_variations_beta_{str(beta).replace('.', '_')}.pdf", bbox_inches='tight')
+else:
+    plt.show()
+plt.close()
+plt.ylim([-1,1])
+
 if METHOD == 'GRID':
-    plt.plot(T_i_vals, delta_vals, color = 'black', label=r"$\Delta_T(\tilde{x}_{\,0})$")
-plt.plot(t_hr_eval, x, label = r"$x^*$")
-    
+    plt.plot(T_i_vals, delta_vals, color = 'black', label=r"$\Delta_T(\tilde{x}_{\,0})$", linewidth = 2)
+
+plt.plot(T_i_vals, np.zeros(len(T_i_vals)), color = 'black', linestyle="--", linewidth = 1)
 plt.vlines(T_result, ymin= -1, ymax =5, color = 'red', linestyle="--", linewidth = 1, label=rf"$T^* = {T_result[0]:.3f}$")
 plt.legend()
-plt.xlabel("$t$")
-plt.savefig(f"figures/polynomial_delta_0_beta_{str(beta).replace('.', '_')}.pdf", bbox_inches='tight')
+plt.xlabel("$T$")
+plt.ylabel(r"$\Delta_T(\tilde{x}_0)$")
+if SAVE_TO_PDF:
+    plt.savefig(f"figures/polynomial_delta_0_beta_{str(beta).replace('.', '_')}.pdf", bbox_inches='tight')
+else:
+    plt.show()
 plt.close()
