@@ -91,7 +91,7 @@ time_bs = np.zeros(len(N_it_vals))
 q = 1
 CONV_TOL = 0
 
-bs = BernsteinSplines(t, q) 
+bs = BernsteinSplines(t, q)
 f_bs.set_bs_mult_upscale_functions(bs.splines_multiply, bs.splines_upscale)
 spline_solver = bs.initialize_solver(f_bs.f, x_0, alpha, beta_vals=1)
 
