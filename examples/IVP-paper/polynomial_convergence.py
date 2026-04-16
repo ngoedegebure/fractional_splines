@@ -166,13 +166,13 @@ if "h" in PLOT_SELECTION:
 
     ### Detailed view (i = detail_i_select) ###
     axs[2].set_title(
-        rf"Absolute weighed error over time $h\,={1/base_h:.0f}^{{-{detail_i_select}}}$",
+        rf"Absolute weighted error over time $h\,={1/base_h:.0f}^{{-{detail_i_select}}}$",
         fontsize=small_font,
     )
     axs[2].plot(t, (np.abs(error)))
     axs[2].set_xlabel("$t$")
     axs[2].set_ylabel(
-        r"Weighed error $|y^{q,\varepsilon}(t) - y^\varepsilon (t)|_{1-\gamma}$ "
+        r"weighted error $|y^{q,\varepsilon}(t) - y^\varepsilon (t)|_{1-\gamma}$ "
     )
 
     if SAVE_TO_PDF:
@@ -184,7 +184,7 @@ if "h" in PLOT_SELECTION:
         plt.show()
 
     print("\n~~~h TABLE ~~~\n")
-    print(r"$h$ & mean weighed error & sup weighed error & total time (s) \\ \hline")
+    print(r"$h$ & mean weighted error & sup weighted error & total time (s) \\ \hline")
     for i_h in range(len(h_vals)):
         print_sc(fr"${1/base_h:.0f}^{{-{i_h}}}$ &$ {mean_error_s[i_h]:.3e} }}$& ${error_s[i_h]:.3e}}}$ & ${run_times[i_h]:.3e}}}$ \\")
     print(r'\hline'+"\n")
@@ -270,13 +270,13 @@ if "q" in PLOT_SELECTION:
     axs[1].legend()
 
     axs[2].set_title(
-        f"Absolute weighed error over time $q={{{detail_q_select}}}$",
+        f"Absolute weighted error over time $q={{{detail_q_select}}}$",
         fontsize=small_font,
     )
     axs[2].plot(t, np.abs(error))
     axs[2].set_xlabel("$t$")
     axs[2].set_ylabel(
-        r"Weighed error $|y^{q,\varepsilon}(t) - y^\varepsilon (t)|_{1-\gamma}$ "
+        r"weighted error $|y^{q,\varepsilon}(t) - y^\varepsilon (t)|_{1-\gamma}$ "
     )
 
     if SAVE_TO_PDF:
@@ -288,7 +288,7 @@ if "q" in PLOT_SELECTION:
         plt.show()
 
     print("\n~~~q TABLE ~~~\n")
-    print(r"$q$ & mean weighed error & sup weighed error & total time (s) \\ \hline")
+    print(r"$q$ & mean weighted error & sup weighted error & total time (s) \\ \hline")
     for i_q in range(len(q_vals)):
         print_sc(fr"${q_vals[i_q]:.0f}$ &$ {mean_error_q[i_q]:.3e} }}$& ${error_q[i_q]:.3e}}}$ & ${run_times_q[i_q]:.3e}}}$ \\")
     print(r'\hline'+"\n")
@@ -390,10 +390,10 @@ if "eps" in PLOT_SELECTION:
     )
     axs[1].legend()
 
-    axs[2].set_title("Absolute weighed error over time", fontsize=small_font)
+    axs[2].set_title("Absolute weighted error over time", fontsize=small_font)
     axs[2].legend()
     axs[2].set_xlabel("$t$")
-    axs[2].set_ylabel(r"Weighed error $|y^{q,\varepsilon}(t) - y (t)\,|_{1-\gamma}$ ")
+    axs[2].set_ylabel(r"weighted error $|y^{q,\varepsilon}(t) - y (t)\,|_{1-\gamma}$ ")
     if SAVE_TO_PDF:
         plt.savefig(
             f'figures/conv_eps--alpha_{str(alpha).replace(".", "_")}_k_{str(k).replace(".", "_")}.pdf',
@@ -403,7 +403,7 @@ if "eps" in PLOT_SELECTION:
         plt.show()
     
     print("\n~~~ eps TABLE ~~~\n")
-    print(r"$\varepsilon$ & mean weighed error & sup weighed error & total time (s) & $x^{q,\varepsilon}(\varepsilon)$ \\ \hline")
+    print(r"$\varepsilon$ & mean weighted error & sup weighted error & total time (s) & $x^{q,\varepsilon}(\varepsilon)$ \\ \hline")
     for i_eps in range(len(eps_vals)):
         print_sc(fr"${1/base_eps:.0f}^{{-{i_vals_eps[i_eps]}}}$ &$ {mean_error_eps[i_eps]:.3e} }}$& ${error_eps[i_eps]:.3e}}}$ & ${run_times_eps[i_eps]:.3e}}}$ & ${first_val[i_eps]:.3e}}}$ \\")
     print(r'\hline'+"\n")
