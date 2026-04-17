@@ -16,8 +16,8 @@ def print_sc(output_str, remove_zero_exp = False):
 
 # %%
 
-SAVE_TO_PDF = False
-PLOT_SELECTION = ["pol"]
+SAVE_TO_PDF = True
+PLOT_SELECTION = ["exp"]
 
 # %%
 ### Initialize rhs function f ###
@@ -75,10 +75,10 @@ f = Lin_DE(params = params, bernstein = True, transpose=False)
 
 
 def y(t, k, x_0, alpha, beta):
-    return x_0*ML(a*t**alpha, alpha, n_terms = 500)
+    return x_0*ML(a*t**alpha, alpha, n_terms = 100)
 
 def y_eps(t, k, x_0, alpha, beta, eps):
-    return x_0*ML(a*t**alpha, alpha, n_terms = 500)
+    return x_0*ML(a*t**alpha, alpha, n_terms = 100)
 
 
 # %%
@@ -95,13 +95,13 @@ CONV_TOL = 1e-12
 ### h plot parameters ###
 
 # %%
-alpha_vals = np.round(np.linspace(0.5, 1, 10), 3)
+alpha_vals = np.round(np.linspace(0.5, 1, 15), 3) # Rounding for numerical stability
 
-if "pol" in PLOT_SELECTION:
+if "exp" in PLOT_SELECTION:
     T = 15
     q = 1
     h = 0.01
-    detail_i_select = [0, 4, -1]
+    detail_i_select = [0, len(alpha_vals)//2, -1]
     alpha_i_select = [alpha_vals[i] for i in detail_i_select]
 
     ### h plot execution ###
@@ -117,8 +117,9 @@ if "pol" in PLOT_SELECTION:
     )
 
     colors, cmap = get_lin_line_colors(alpha_vals)
-    mean_error_s, error_s = np.zeros(len(alpha_vals)), np.zeros(len(alpha_vals))
+    mean_error_s, error_s, error_s_unw = np.zeros(len(alpha_vals)), np.zeros(len(alpha_vals)), np.zeros(len(alpha_vals))
     run_times = np.zeros([len(alpha_vals)])
+    N_it_per_knot_vals = np.zeros([len(alpha_vals)])
     spline_its = np.zeros(len(alpha_vals))
 
     fig, axs = plt.subplots(1, 3, figsize=(3 * fig_size, fig_size), layout="tight")
@@ -127,7 +128,6 @@ if "pol" in PLOT_SELECTION:
     for alpha in alpha_vals:
 
         gamm = alpha + beta - alpha * beta
-
         
         f.set_bs_mult_upscale_functions(bs.splines_multiply, bs.splines_upscale)
         solver = bs.initialize_solver(f.f, y_0, alpha, beta_vals=1,)
@@ -139,42 +139,47 @@ if "pol" in PLOT_SELECTION:
             method="local",
             conv_max_it=5000,
         )
-        y_q_eps, t, run_time_s = np.squeeze(res["x"]), t_hr_eval, res["total_time"]
+        y_q_eps, t, run_time_s, N_it_per_knot_vals[i] = np.squeeze(res["x"]), t_hr_eval, res["total_time"], res["n_it_per_knot"]
         y_eps_vals = y_eps(t, k, y_0, alpha, beta=beta, eps=eps)
 
-        label_str = rf"$\alpha = {alpha:.1f}$"
+        label_str = rf"$\alpha = {alpha:.2f}$"
 
         run_times[i] = np.array([run_time_s])
         spline_its[i] = res["n_it_per_knot"]
-        axs[0].plot(t, y_q_eps, label=label_str, color=colors[i])
-
-        error_time_weighed = t ** (1 - gamm) * (y_q_eps - y_eps_vals)
-
-        if alpha in alpha_i_select:
-            error = (y_q_eps - y_eps_vals)
-            axs[2].plot(t, (np.abs(error)), label = rf'$\alpha = {alpha:.1f}$')
-
-        mean_error_s[i] = np.mean(np.abs(error_time_weighed))
-        error_s[i] = np.max(np.abs(error_time_weighed))
 
         linestyle = (0, (1,2))
         linewidth = 3
-        if i == len(alpha_vals)-1:
-            axs[0].plot(
-                t, y_eps_vals, linestyle=linestyle, linewidth=linewidth, color=colors[i], label=r'Analytical $y^\varepsilon$'
-            )
-        else:
-            axs[0].plot(
-                t, y_eps_vals,linestyle=linestyle, linewidth=linewidth, color=colors[i]
-            )
+
+        if i % 2 == 0:
+            axs[0].plot(t, y_q_eps, label=label_str, color=colors[i])
+            if i == len(alpha_vals)-1:
+                axs[0].plot(
+                    t, y_eps_vals, linestyle=linestyle, linewidth=linewidth, color=colors[i], label=r'Analytical $x$'
+                )
+            else:
+                axs[0].plot(
+                    t, y_eps_vals,linestyle=linestyle, linewidth=linewidth, color=colors[i]
+                )
+
+        error_time_unweighted = (y_q_eps - y_eps_vals)
+        error_s_unw[i] = np.max(np.abs(error_time_unweighted))
+        error_time_weighed = t ** (1 - gamm) * error_time_unweighted
+
+        if alpha in alpha_i_select:
+            error = (y_q_eps - y_eps_vals)
+            axs[2].loglog(t, (np.abs(error)), label = rf'$\alpha = {alpha:.2f}$')
+
+        mean_error_s[i] = np.mean(np.abs(error_time_weighed))
+        error_s[i] = np.max(np.abs(error_time_weighed))
+        
 
         i += 1
 
     axs[0].set_xlabel("$t$")
-    axs[0].set_ylabel(r"$y\,(t)$")
-    axs[0].set_title(rf"Solutions for $\alpha$", fontsize=small_font)
+    axs[0].set_ylabel(r"$x\,(t)$")
+    axs[0].set_title(rf"Solutions for $\alpha$ (selection)", fontsize=small_font)
     axs[0].legend()
-    axs[0].set_ylim([0, 10])
+    # axs[0].set_ylim([0, 1])
 
     order = alpha
     order_label = r"Theoretical upper bound $\mathcal{O}(h^\alpha)$"
@@ -182,36 +187,36 @@ if "pol" in PLOT_SELECTION:
     reference_errors = C * alpha_vals**order
 
     ### Convergence order plot loglog ###
-    axs[1].set_title(r"Absolute weighted error for $\alpha$", fontsize=small_font)
+    axs[1].set_title(r"Absolute error for $\alpha$", fontsize=small_font)
     axs[1].set_xlabel(r"$\alpha$")
     axs[1].set_ylabel(
-        r"Weighted sup error $||y^{q,\varepsilon} - y^\varepsilon||_{1-\gamma}$ (log)"
+        r"sup error $||x^{q,\varepsilon} - x^\varepsilon||$"
     )
     axs[1].plot(alpha_vals, error_s, label="Numerical error", linewidth=2, color="orange")
     axs[1].legend()
-    axs[1].invert_xaxis()
+    # axs[1].invert_xaxis()
 
     ### Detailed view (i = detail_i_select) ###
     axs[2].set_title(
-        rf"Absolute unweighted error over time",
+        rf"Absolute error over time (selection)",
         fontsize=small_font,
     )
-    axs[2].set_xlabel("$t$")
+    axs[2].set_xlabel("$t$ (log)")
     axs[2].set_ylabel(
-        r"Unweighted error $|y^{q,\varepsilon}(t) - y^\varepsilon (t)|$ "
+        r"Error $|x^{q,\varepsilon}(t) - x^\varepsilon (t)|$ (log)"
     )
     axs[2].legend()
 
     if SAVE_TO_PDF:
         plt.savefig(
-            f'figures/conv_h--alpha_{str(alpha).replace(".", "_")}_k_{str(k).replace(".", "_")}.pdf',
+            f'figures/lin_sys_ML_alpha_k_{str(k).replace(".", "_")}.pdf',
             bbox_inches="tight",
         )
     else:
         plt.show()
 
-    print("\n~~~h TABLE ~~~\n")
-    print(r"$\alpha$ & mean weighted error & sup weighted error & total time (s) \\ \hline")
-    for i_h in range(len(alpha_vals)):
-        print_sc(fr"${alpha:.1f}^{{-{i_h}}}$ &$ {mean_error_s[i_h]:.3e} }}$& ${error_s[i_h]:.3e}}}$ & ${run_times[i_h]:.3e}}}$ \\")
+    print("\n~~~alpha TABLE ~~~\n")
+    print(r"$\alpha$ & mean error & sup error & total time (s) & avg. it. per knot\\ \hline")
+    for i_alpha in range(len(alpha_vals)):
+        print_sc(fr"${alpha_vals[i_alpha]:.2f}$  &$ {mean_error_s[i_alpha]:.3e} }}$& ${error_s[i_alpha]:.3e}}}$ & ${run_times[i_alpha]:.3e}}}$ &$ {N_it_per_knot_vals[i_alpha]:.3f}$\\")
     print(r'\hline'+"\n")

@@ -18,7 +18,7 @@ def print_sc(output_str, remove_zero_exp = False):
 # %%
 
 PLOT_SELECTION = ["h", "q", "eps"]
-SAVE_TO_PDF = False
+SAVE_TO_PDF = True
 
 # %%
 ### Initialize rhs function f ###
@@ -150,7 +150,7 @@ if "h" in PLOT_SELECTION:
     axs[1].set_title(f"Convergence order", fontsize=small_font)
     axs[1].set_xlabel("Knot size $h$ (log, decreasing)")
     axs[1].set_ylabel(
-        r"Weighed sup error $||y^{q,\varepsilon} - y^\varepsilon||_{1-\gamma}$ (log)"
+        r"Weighted sup error $||y^{q,\varepsilon} - y^\varepsilon||_{1-\gamma}$ (log)"
     )
     axs[1].loglog(h_vals, error_s, label="Numerical error", linewidth=2, color="orange")
     axs[1].loglog(
@@ -256,7 +256,7 @@ if "q" in PLOT_SELECTION:
     axs[1].set_title(f"Convergence order", fontsize=small_font)
     axs[1].set_xlabel("Spline order $q$ (log)")
     axs[1].set_ylabel(
-        r"Weighed sup error $||y^{q,\varepsilon} - y^\varepsilon||_{1-\gamma}$ (log)"
+        r"Weighted sup error $||y^{q,\varepsilon} - y^\varepsilon||_{1-\gamma}$ (log)"
     )
     axs[1].loglog(q_vals, error_q, label="Numerical error", linewidth=2, color="orange")
     axs[1].loglog(
@@ -374,7 +374,7 @@ if "eps" in PLOT_SELECTION:
     axs[1].set_title(f"Convergence order", fontsize=small_font)
     axs[1].set_xlabel(r"$\varepsilon$ (log, decreasing)")
     axs[1].set_ylabel(
-        r"Weighed sup error $||y^{q,\varepsilon} - y\, ||_{1-\gamma}$ (log)"
+        r"Weighted sup error $||y^{q,\varepsilon} - y\, ||_{1-\gamma}$ (log)"
     )
     axs[1].invert_xaxis()
     axs[1].loglog(

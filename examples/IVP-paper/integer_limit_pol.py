@@ -15,7 +15,7 @@ def print_sc(output_str, remove_zero_exp = False):
 
 # %%
 
-SAVE_TO_PDF = False
+SAVE_TO_PDF = True
 PLOT_SELECTION = ["pol"]
 
 # %%
@@ -85,7 +85,7 @@ if "pol" in PLOT_SELECTION:
         np.linspace(eps / T, 1, int((1e3)))
     ) * T  # high-res time values
     colors, cmap = get_lin_line_colors(alpha_vals)
-    mean_error_s, error_s = np.zeros(len(alpha_vals)), np.zeros(len(alpha_vals))
+    mean_error_s, error_s, error_s_unw = np.zeros(len(alpha_vals)), np.zeros(len(alpha_vals)), np.zeros(len(alpha_vals))
     run_times = np.zeros([len(alpha_vals)])
     spline_its = np.zeros(len(alpha_vals))
 
@@ -115,17 +115,18 @@ if "pol" in PLOT_SELECTION:
         y_q_eps, t, run_time_s = np.squeeze(res["x"]), t_hr_eval, res["total_time"]
         y_eps_vals = y_eps(t, k, y_0, alpha, beta=beta, eps=eps)
 
-        label_str = rf"$\alpha = {alpha:.1f}$"
+        label_str = rf"$\alpha = {alpha:.2f}$"
 
         run_times[i] = np.array([run_time_s])
         spline_its[i] = res["n_it_per_knot"]
         axs[0].plot(t, y_q_eps, label=label_str, color=colors[i])
 
         error_time_weighed = t ** (1 - gamm) * (y_q_eps - y_eps_vals)
+        error_unweighted = (y_q_eps - y_eps_vals)
+        error_s_unw[i] = np.max(np.abs(error_unweighted))
 
         if alpha in alpha_i_select:
-            error = (y_q_eps - y_eps_vals)
-            axs[2].plot(t, (np.abs(error)), label = rf'$\alpha = {alpha:.1f}$')
+            axs[2].plot(t, (np.abs(error_time_weighed)), label = rf'$\alpha = {alpha:.2f}$')
 
         mean_error_s[i] = np.mean(np.abs(error_time_weighed))
         error_s[i] = np.max(np.abs(error_time_weighed))
@@ -162,29 +163,29 @@ if "pol" in PLOT_SELECTION:
     )
     axs[1].plot(alpha_vals, error_s, label="Numerical error", linewidth=2, color="orange")
     axs[1].legend()
-    axs[1].invert_xaxis()
+    # axs[1].invert_xaxis()
 
     ### Detailed view (i = detail_i_select) ###
     axs[2].set_title(
-        rf"Absolute unweighted error over time",
+        rf"Absolute weighted error over time",
         fontsize=small_font,
     )
     axs[2].set_xlabel("$t$")
     axs[2].set_ylabel(
-        r"Unweighted error $|y^{q,\varepsilon}(t) - y^\varepsilon (t)|$ "
+        r"Weighted error $|y^{q,\varepsilon}(t) - y^\varepsilon (t)|_{1-\gamma}$ "
     )
     axs[2].legend()
 
     if SAVE_TO_PDF:
         plt.savefig(
-            f'figures/conv_h--alpha_{str(alpha).replace(".", "_")}_k_{str(k).replace(".", "_")}.pdf',
+            f'figures/pol_alpha_k_{str(k).replace(".", "_")}.pdf',
             bbox_inches="tight",
         )
     else:
         plt.show()
 
     print("\n~~~h TABLE ~~~\n")
-    print(r"$\alpha$ & mean weighted error & sup weighted error & total time (s) \\ \hline")
+    print(r"$\alpha$ & mean weighted error & sup weighted error & sup unw. error & total time (s) \\ \hline")
     for i_h in range(len(alpha_vals)):
-        print_sc(fr"${alpha:.1f}^{{-{i_h}}}$ &$ {mean_error_s[i_h]:.3e} }}$& ${error_s[i_h]:.3e}}}$ & ${run_times[i_h]:.3e}}}$ \\")
+        print_sc(fr"${alpha_vals[i_h]:.2f}$ &$ {mean_error_s[i_h]:.3e} }}$& ${error_s[i_h]:.3e}}}$ & ${error_s_unw[i_h]:.3e}}}$ & ${run_times[i_h]:.3e}}}$ \\")
     print(r'\hline'+"\n")

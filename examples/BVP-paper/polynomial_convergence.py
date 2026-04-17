@@ -15,7 +15,7 @@ def print_sc(output_str, remove_zero_exp = False):
 
 # %%
 
-PLOT_SELECTION = ['q']#["h","q","eps"]
+PLOT_SELECTION = ["h","q","eps"]
 SAVE_TO_PDF = False 
 
 # %%
@@ -105,6 +105,30 @@ if "h" in PLOT_SELECTION:
 
     fig, axs = plt.subplots(1, 3, figsize=(3 * fig_size, fig_size), layout="tight")
 
+    #####
+    # WARMUP ROUND FOR TIME STATS #
+    N = int(T / 10e-2) + 1
+    t_knot_vals = (np.linspace(eps / T, 1, N)) ** 1 * T
+
+    bs = fr.splines.BernsteinSplines(
+            t_knot_vals, f.N_upscale * q, silent_mode=True, n_eval=q
+        )
+    f.bs_mult, f.bs_upscale = bs.splines_multiply, bs.splines_upscale
+    solver = bs.initialize_solver(f.f, y_0, alpha, beta_vals=beta)
+
+    res = solver.run(
+        t_eval=t_hr_eval,
+        verbose=False,
+        conv_tol=CONV_TOL,
+        method="global",
+        bvp = BVP,
+        T = T_bvp,
+        save_x=False,
+        conv_max_it=CONV_MAX_IT,
+    )
+
+    ###
+
     i = 0
     for h in h_vals:
         N = int(T / h) + 1
@@ -132,7 +156,10 @@ if "h" in PLOT_SELECTION:
         label_str = rf"$h\,={1/base_h:.0f}^{{-{i}}}$"
 
         run_times[i] = np.squeeze([run_time_s])
-        spline_its[i] = res["n_it_per_knot"]
+        spline_its[i] = res["n_it"]
+
+        # print(f"h index {i} : {res['n_it']:.20f}")
+
         axs[0].plot(t, y_q_eps, label=label_str, color=colors[i])
 
         error_time_weighed = t ** (1 - gamm) * (y_q_eps - y_eps_vals)
@@ -249,6 +276,8 @@ if "q" in PLOT_SELECTION:
         run_times_q[i] = np.squeeze([run_time_s])
         spline_its[i] = res["n_it_per_knot"]
 
+        # print(f"q index {i} : {res['n_it']:.20f}")
+
         axs[0].plot(t, y_q_eps, label=label_str, color=colors[i])
 
         error_time_weighed = t ** (1 - gamm) * (y_q_eps - y_eps_vals)
@@ -364,7 +393,10 @@ if "eps" in PLOT_SELECTION:
         spline_its[i] = res["n_it_per_knot"]
 
         axs[0].plot(t, y_q_eps, label=label_str, color=colors[i])
-
+        
+        
+        # print(f"eps index {i} : {res['n_it']:.20f}")
+        
         error_time_weighed = t ** (1 - gamm) * (y_q_eps - y_vals)
         error_eps[i] = np.max(np.abs(error_time_weighed))
         mean_error_eps[i] = np.max(np.abs(error_time_weighed))
