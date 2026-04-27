@@ -1,8 +1,8 @@
 ## Bernstein splines solvers for Hilfer derivative fractional differential equations
 
-<center>
+<div align='center'>
 <img src="docs/pictures/stable_heart_empty.png" alt="A phase portrait heart<3" width="70%"/>
-</center>
+</div>
 
 Check out the arXiv preprints outlining the [implementation and convergence for IVP's](https://arxiv.org/abs/2503.22335) and the [perturbation of solutions method for BVP's](https://arxiv.org/abs/2601.13584).
 
